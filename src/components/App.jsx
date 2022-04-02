@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Searchbar from './Searchbar';
@@ -14,103 +14,99 @@ import Modal from './Modal';
 import IconButton from './IconButton';
 import { ReactComponent as SearchIcon } from '../icons/search-icon.svg';
 
-class App extends Component {
-  state = {
-    searchQuery: null,
-    results: [],
-    status: 'idle',
-    showModal: false,
-    currentImageSrc: '',
-  };
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState(null);
+  const [results, setResults] = useState([]);
+  const [status, setStatus] = useState('idle');
+  const [showModal, setShowModal] = useState(false);
+  const [currentImageSrc, setCurrentImageSrc] = useState('');
 
-  componentDidUpdate(prevProps, prevState) {
-    const prevSearchQuery = prevState.searchQuery;
-    const nextSearchQuery = this.state.searchQuery;
-
-    if (prevSearchQuery !== nextSearchQuery) {
-      this.setState({ status: 'pending' });
-
-      resultsFetcherAPI.fetchData(nextSearchQuery).then(response => {
-        this.setState(prevState => {
-          return {
-            results: [...prevState.results, ...response.data.hits],
-            status: 'resolved',
-          };
-        });
-        if (response.data.hits.length === 0) {
-          this.setState({ status: 'rejected' });
-        }
-      });
+  useEffect(() => {
+    if (searchQuery === null) {
+      return;
     }
-  }
 
-  onFormSubmit = newSearchQuery => {
-    if (newSearchQuery === this.state.searchQuery) {
+    setStatus('pending');
+
+    resultsFetcherAPI.fetchData(searchQuery).then(response => {
+      setResults(prevState => {
+        return [...prevState, ...response.data.hits];
+      });
+      setStatus('resolved');
+
+      if (response.data.hits.length === 0) {
+        setStatus('rejected');
+      }
+    });
+  }, [searchQuery]);
+
+  const onFormSubmit = newSearchQuery => {
+    if (newSearchQuery === searchQuery) {
       toast.error(`"${newSearchQuery}" results are already here!`);
       return;
     }
-    this.setState({ searchQuery: newSearchQuery, results: [] });
+    setSearchQuery(newSearchQuery);
+    setResults([]);
   };
 
-  onLoadMoreClick = data => {
-    this.setState({ results: [...data] });
+  const onLoadMoreClick = data => {
+    setResults([...data]);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
+  const toggleModal = () => {
+    setShowModal(prevState => {
+      return !prevState;
+    });
   };
 
-  modalSrcFetcher = e => {
-    this.setState({ currentImageSrc: e.target.attributes.srcSet.value });
+  const modalSrcFetcher = e => {
+    setCurrentImageSrc(e.target.attributes.srcSet.value);
   };
 
-  render() {
-    const { searchQuery, results, status, showModal, currentImageSrc } =
-      this.state;
-
-    if (showModal) {
-      const bodyRef = document.querySelector('body');
-      bodyRef.classList.add('.modal-open');
-    }
-
-    return (
-      <div className={s.App}>
-        <Searchbar onSubmit={this.onFormSubmit}>
-          <IconButton aria-label="start search">
-            <SearchIcon width="20" height="20" />
-          </IconButton>
-        </Searchbar>
-        {showModal && (
-          <Modal onClose={this.toggleModal} currentImageSrc={currentImageSrc} />
-        )}
-        {status === 'idle' && <BeforeQuery />}
-        {status === 'pending' && <Loader searchQuery={searchQuery} />}
-        {status === 'rejected' && <RejectedQuery searchQuery={searchQuery} />}
-        {status === 'resolved' && (
-          <>
-            <ImageGallery>
-              {results.map(result => {
-                return (
-                  <ImageGalleryItem
-                    key={result.id}
-                    result={result}
-                    onClick={this.toggleModal}
-                    modalSrcFetcher={this.modalSrcFetcher}
-                  />
-                );
-              })}
-            </ImageGallery>
-            <Button
-              appState={this.state}
-              onLoadMore={resultsFetcherAPI.fetchData}
-              stateRenewer={this.onLoadMoreClick}
-            />
-          </>
-        )}
-        <ToastContainer />
-      </div>
-    );
+  if (showModal) {
+    const bodyRef = document.querySelector('body');
+    bodyRef.classList.add('.modal-open');
   }
-}
+
+  const state = { results, searchQuery };
+
+  return (
+    <div className={s.App}>
+      <Searchbar onSubmit={onFormSubmit}>
+        <IconButton aria-label="start search">
+          <SearchIcon width="20" height="20" />
+        </IconButton>
+      </Searchbar>
+      {showModal && (
+        <Modal onClose={toggleModal} currentImageSrc={currentImageSrc} />
+      )}
+      {status === 'idle' && <BeforeQuery />}
+      {status === 'pending' && <Loader searchQuery={searchQuery} />}
+      {status === 'rejected' && <RejectedQuery searchQuery={searchQuery} />}
+      {status === 'resolved' && (
+        <>
+          <ImageGallery>
+            {results.map(result => {
+              return (
+                <ImageGalleryItem
+                  key={result.id}
+                  result={result}
+                  onClick={toggleModal}
+                  modalSrcFetcher={modalSrcFetcher}
+                />
+              );
+            })}
+          </ImageGallery>
+          <Button
+            appState={state}
+            onLoadMore={resultsFetcherAPI.fetchData}
+            stateRenewer={onLoadMoreClick}
+          />
+        </>
+      )}
+      <ToastContainer />
+    </div>
+  );
+};
 
 export default App;

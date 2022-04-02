@@ -1,46 +1,41 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import s from './Button.module.css';
 
-class Button extends Component {
-  state = { searchQuery: null, results: [] };
+const Button = ({ appState, onLoadMore, stateRenewer }) => {
+  const [searchQuery, setSearchQuery] = useState(null);
+  const [results, setResults] = useState([]);
 
-  onLoadMoreClick = () => {
-    const { searchQuery } = this.props.appState;
+  useEffect(() => {
+    const { results, searchQuery } = appState;
 
-    this.props.onLoadMore(this.state.searchQuery).then(response => {
-      this.setState(prevState => {
-        return {
-          results: [...prevState.results, ...response.data.hits],
-          searchQuery,
-        };
+    setResults(prevState => {
+      return [...prevState, ...results];
+    });
+    setSearchQuery(searchQuery);
+  }, []);
+
+  useEffect(() => {
+    stateRenewer(results);
+  }, [results, searchQuery]);
+
+  const onLoadMoreClick = () => {
+    const { searchQuery } = appState;
+
+    onLoadMore(searchQuery).then(response => {
+      setResults(prevState => {
+        return [...prevState, ...response.data.hits];
       });
+      setSearchQuery(searchQuery);
     });
   };
 
-  componentDidMount() {
-    const { results, searchQuery } = this.props.appState;
-
-    this.setState(prevState => {
-      return { results: [...prevState.results, ...results], searchQuery };
-    });
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.results !== this.state.results) {
-      this.props.stateRenewer(this.state.results);
-      return;
-    }
-  }
-
-  render() {
-    return (
-      <button type="button" className={s.Button} onClick={this.onLoadMoreClick}>
-        Load more
-      </button>
-    );
-  }
-}
+  return (
+    <button type="button" className={s.Button} onClick={onLoadMoreClick}>
+      Load more
+    </button>
+  );
+};
 
 Button.propTypes = {
   appState: PropTypes.object.isRequired,
