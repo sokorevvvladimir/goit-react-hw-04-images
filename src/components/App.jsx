@@ -68,6 +68,7 @@ const App = () => {
   }
 
   const state = { results, searchQuery };
+  console.log(results.length);
 
   return (
     <div className={s.App}>
@@ -89,11 +90,13 @@ const App = () => {
             toggleModal={toggleModal}
             modalSrcFetcher={modalSrcFetcher}
           />
-          <Button
-            appState={state}
-            onLoadMore={resultsFetcherAPI.fetchData}
-            stateRenewer={onLoadMoreClick}
-          />
+          {results.length <= 500 && (
+            <Button
+              appState={state}
+              onLoadMore={resultsFetcherAPI.fetchData}
+              stateRenewer={onLoadMoreClick}
+            />
+          )}
         </>
       )}
       <ToastContainer />
