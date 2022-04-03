@@ -3,7 +3,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
-import ImageGalleryItem from './ImageGalleryItem';
 import Button from './Button';
 import s from './App.module.css';
 import Loader from './Loader';
@@ -85,18 +84,11 @@ const App = () => {
       {status === 'rejected' && <RejectedQuery searchQuery={searchQuery} />}
       {status === 'resolved' && (
         <>
-          <ImageGallery>
-            {results.map(result => {
-              return (
-                <ImageGalleryItem
-                  key={result.id}
-                  result={result}
-                  onClick={toggleModal}
-                  modalSrcFetcher={modalSrcFetcher}
-                />
-              );
-            })}
-          </ImageGallery>
+          <ImageGallery
+            results={results}
+            toggleModal={toggleModal}
+            modalSrcFetcher={modalSrcFetcher}
+          />
           <Button
             appState={state}
             onLoadMore={resultsFetcherAPI.fetchData}
