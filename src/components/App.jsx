@@ -19,6 +19,7 @@ const App = () => {
   const [status, setStatus] = useState('idle');
   const [showModal, setShowModal] = useState(false);
   const [currentImageSrc, setCurrentImageSrc] = useState('');
+  const [totalHits, setTotalHits] = useState(0);
 
   useEffect(() => {
     if (searchQuery === null) {
@@ -32,6 +33,7 @@ const App = () => {
         return [...prevState, ...response.data.hits];
       });
       setStatus('resolved');
+      setTotalHits(response.data.totalHits);
 
       if (response.data.hits.length === 0) {
         setStatus('rejected');
@@ -89,7 +91,7 @@ const App = () => {
             toggleModal={toggleModal}
             modalSrcFetcher={modalSrcFetcher}
           />
-          {results.length <= 500 && (
+          {results.length <= totalHits && (
             <Button
               appState={state}
               onLoadMore={resultsFetcherAPI.fetchData}
