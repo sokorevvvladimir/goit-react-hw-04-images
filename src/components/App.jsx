@@ -68,7 +68,6 @@ const App = () => {
   }
 
   const state = { results, searchQuery };
-  console.log(results.length);
 
   return (
     <div className={s.App}>
